@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>DebugPaneActiveTab</key>
+	<real>0.0</real>
+	<key>FolderExpanded_AppAuth.Authentication_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AppAuth.Authentication.elements_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/</key>
+	<true/>
+	<key>NavigationPaneActiveTab</key>
+	<real>0.0</real>
+	<key>Properties</key>
+	<dict/>
+	<key>SelectedNode</key>
+	<string>file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AppAuth.Authentication.elements_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AuthenticationAppDelegate.pas</string>
+	<key>ViewMetaData</key>
+	<dict>
+		<key>file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AppAuth.Authentication.elements_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AuthenticationAppDelegate.pas</key>
+		<dict>
+			<key>CursorX</key>
+			<integer>0</integer>
+			<key>CursorY</key>
+			<integer>0</integer>
+			<key>ScrollX</key>
+			<real>0.0</real>
+			<key>ScrollY</key>
+			<real>0.0</real>
+			<key>SelectionCursorUndecided</key>
+			<false/>
+			<key>SelectionEndColumn</key>
+			<integer>0</integer>
+			<key>SelectionEndLine</key>
+			<integer>0</integer>
+			<key>SelectionIsLinear</key>
+			<false/>
+			<key>SelectionStartColumn</key>
+			<integer>0</integer>
+			<key>SelectionStartLine</key>
+			<integer>-1</integer>
+		</dict>
+	</dict>
+</dict>
+</plist>

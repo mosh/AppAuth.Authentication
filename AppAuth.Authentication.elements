@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0" DefaultTargets="Build">
+    <PropertyGroup Label="Globals">
+        <ProjectGuid>BACC5790-7237-4833-9099-DABC9F183309</ProjectGuid>
+    </PropertyGroup>
+    <PropertyGroup>
+        <RootNamespace>AppAuth.Authentication</RootNamespace>
+    </PropertyGroup>
+    <Import Project="AppAuth.Authentication.projitems" Label="Shared"/>
+    <Import Project="$(MSBuildExtensionsPath)\RemObjects Software\Elements\RemObjects.Elements.SharedProject.targets"/>
+    <PropertyGroup>
+        <PreBuildEvent/>
+    </PropertyGroup>
+</Project>
