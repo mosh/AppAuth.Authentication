@@ -9,8 +9,9 @@
         <Import_RootNamespace>AppAuth.Authentication</Import_RootNamespace>
     </PropertyGroup>
     <ItemGroup>
-        <Compile Include="$(MSBuildThisFileDirectory)AuthenticationViewController.pas"/>
         <Compile Include="$(MSBuildThisFileDirectory)AuthenticationAppDelegate.pas"/>
         <Compile Include="$(MSBuildThisFileDirectory)UserInfo.pas"/>
+        <Compile Include="$(MSBuildThisFileDirectory)AuthenticationService.pas"/>
+        <Compile Include="$(MSBuildThisFileDirectory)AuthenticationUIViewControllerExtensions.pas"/>
     </ItemGroup>
 </Project>
