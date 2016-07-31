@@ -85,6 +85,11 @@ type
         AuthState:stateChangeDelegate := self;
       end;
       _authState := value;
+      
+      if(assigned(InterestedParty))then
+      begin
+        InterestedParty.stateChanged;
+      end;
     end;
     
     class method performTokenRequest(request: OIDTokenRequest) callback(callback: OIDTokenCallback);
