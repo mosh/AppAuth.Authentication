@@ -11,5 +11,6 @@
     <ItemGroup>
         <Compile Include="$(MSBuildThisFileDirectory)AuthenticationViewController.pas"/>
         <Compile Include="$(MSBuildThisFileDirectory)AuthenticationAppDelegate.pas"/>
+        <Compile Include="$(MSBuildThisFileDirectory)UserInfo.pas"/>
     </ItemGroup>
 </Project>
