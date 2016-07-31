@@ -76,7 +76,7 @@ type
     method doAuthWithAutoCodeExchange;
     begin
       var issuer:NSURL := AuthenticationService.Instance.issuerURL;
-      var redirectURI:NSURL := AuthenticationService.instance.redirectURL;
+      var redirectURI:NSURL := AuthenticationService.Instance.redirectURL;
       
       NSLog('Fetching configuration for issuer: %@', issuer);
       
