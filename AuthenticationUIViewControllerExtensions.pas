@@ -49,7 +49,7 @@ type
         
         NSLog('Got configuration: %@', configuration);
           
-        var request: OIDAuthorizationRequest := new OIDAuthorizationRequest withConfiguration(configuration) clientId(AuthenticationService.Instance.clientID) scopes([OIDScopeOpenID, OIDScopeProfile]) redirectURL(redirectURI) responseType(OIDResponseTypeCode) additionalParameters(nil);
+        var request: OIDAuthorizationRequest := new OIDAuthorizationRequest withConfiguration(configuration) clientId(AuthenticationService.Instance.clientID) scopes([OIDScopeOpenID, OIDScopeProfile, OIDScopeEmail]) redirectURL(redirectURI) responseType(OIDResponseTypeCode) additionalParameters(nil);
         var appDelegate: AuthenticationAppDelegate := (UIApplication.sharedApplication.&delegate) as AuthenticationAppDelegate;
         
         NSLog('Initiating authorization request %@', request);
@@ -59,12 +59,13 @@ type
             
           if assigned(authorizationResponse) then
           begin
-            AuthenticationService.Instance.AuthState := new OIDAuthState withAuthorizationResponse(authorizationResponse);
+            var authState := new OIDAuthState withAuthorizationResponse(authorizationResponse);
+            AuthenticationService.Instance.AuthState := authState;
             NSLog('Authorization response with code: %@', authorizationResponse.authorizationCode);
           end
           else
           begin
-            NSLog('Authorization error: %@', error.localizedDescription());
+            NSLog('Authorization error: %@', error:localizedDescription());
           end;
             
         end);
@@ -92,7 +93,7 @@ type
           
         NSLog('Got configuration: %@', configuration);
           
-        var request := new OIDAuthorizationRequest withConfiguration(configuration) clientId(AuthenticationService.Instance.clientID) scopes([OIDScopeOpenID, OIDScopeProfile]) redirectURL(redirectURI) responseType(OIDResponseTypeCode) additionalParameters(nil);
+        var request := new OIDAuthorizationRequest withConfiguration(configuration) clientId(AuthenticationService.Instance.clientID) scopes([OIDScopeOpenID, OIDScopeProfile,OIDScopeEmail]) redirectURL(redirectURI) responseType(OIDResponseTypeCode) additionalParameters(nil);
             
         var appDelegate: AuthenticationAppDelegate := (UIApplication.sharedApplication.&delegate) as AuthenticationAppDelegate;
         NSLog('Initiating authorization request with scope: %@', request.scope);
@@ -102,12 +103,13 @@ type
             
           if(assigned(authState))then
           begin
+            
             AuthenticationService.Instance.AuthState := authState;
             NSLog('Got authorization tokens. Access token: %@', authState.lastTokenResponse.accessToken);
           end
           else
           begin
-            NSLog('Authorization error: %@', authRequestError.localizedDescription());
+            NSLog('Authorization error: %@', authRequestError:localizedDescription());
             AuthenticationService.Instance.AuthState := nil;
           end;
         end);

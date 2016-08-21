@@ -8,7 +8,7 @@ uses
 type
 
   IAuthenticationInterestedParty = public interface
-    method stateChanged;
+    method stateChanged(info:UserInfo);
   end;
 
   AuthenticationService = public class(IOIDAuthStateChangeDelegate,IOIDAuthStateErrorDelegate)
@@ -32,17 +32,23 @@ type
     begin
     end;
     
+    method saveState(state:OIDAuthState);
+    begin
+      var archivedAuthState: NSData := NSKeyedArchiver.archivedDataWithRootObject(state);
+      NSUserDefaults.standardUserDefaults().setObject(archivedAuthState) forKey(StateKey);
+      NSUserDefaults.standardUserDefaults().synchronize();
+    end;
+    
 
     method didChangeState(state:not nullable OIDAuthState); 
     begin
-      
-      var archivedAuthState: NSData := NSKeyedArchiver.archivedDataWithRootObject(AuthenticationService.Instance.AuthState);
-      NSUserDefaults.standardUserDefaults().setObject(archivedAuthState) forKey(StateKey);
-      NSUserDefaults.standardUserDefaults().synchronize();
+
+      saveState(state);
       
       if(assigned(InterestedParty))then
       begin
-        InterestedParty.stateChanged;
+        var info := getUserInfo;
+        InterestedParty.stateChanged(info);
       end;
             
     end;
@@ -69,7 +75,12 @@ type
     
     method get_Authorized:Boolean;
     begin
-      exit iif(assigned(AuthState),AuthState.isAuthorized(),false);
+      var _authorized := iif(assigned(AuthState),AuthState.isAuthorized(),false);
+      if(not _authorized)then
+      begin
+        NSLog('AuthenticationService: Not Authorized');
+      end;
+      exit _authorized;
     end;
     
     
@@ -82,14 +93,30 @@ type
     begin
       if(assigned(value))then
       begin
-        AuthState:stateChangeDelegate := self;
+        value.stateChangeDelegate := self;
       end;
       _authState := value;
       
+      var info:UserInfo := nil;
+      
+      if(assigned(_authState))then
+      begin
+        info := getUserInfo;
+      end;
+      
+      saveState(value);
+      
       if(assigned(InterestedParty))then
       begin
-        InterestedParty.stateChanged;
+        InterestedParty.stateChanged(info);
       end;
+    end;
+    
+    method get_AccessToken:String;
+    begin
+      var _accessToken := iif(Authorized,AuthState.lastTokenResponse.accessToken,'');
+      NSLog('AuthenticationService AccessToken [%@]',_accessToken);
+      exit _accessToken;
     end;
     
     class method performTokenRequest(request: OIDTokenRequest) callback(callback: OIDTokenCallback);
@@ -101,7 +128,8 @@ type
         begin
           if(assigned(error))then
           begin
-            callback(nil,error);
+            var returnedError: NSError := OIDErrorUtilities.errorWithCode(OIDErrorCode.NetworkError) underlyingError(error) description(nil);
+            callback(nil,returnedError);
           end
           else
           begin
@@ -109,8 +137,31 @@ type
             
             if(httpUrlResponse.statusCode <> 200) then
             begin
-              var httpError := OIDErrorUtilities.HTTPErrorWithHTTPResponse(httpUrlResponse) data(data);
-              callback(nil,httpError);
+              
+              // A server error occurred.
+              var serverError : NSError := OIDErrorUtilities.HTTPErrorWithHTTPResponse(httpUrlResponse) data(data);
+
+              // HTTP 400 may indicate an RFC6749 Section 5.2 error response, checks for that
+              if (httpUrlResponse.statusCode = 400) then
+              begin
+                var jsonDeserializationError:NSError;
+                
+                var json := NSJSONSerialization.JSONObjectWithData(data) options(0) error(var jsonDeserializationError);
+
+                // if the HTTP 400 response parses as JSON and has an 'error' key, it's an OAuth error
+                // these errors are special as they indicate a problem with the authorization grant
+                if (json[OIDOAuthErrorFieldError]) then
+                begin
+                  var oAuthError:NSError := OIDErrorUtilities.OAuthErrorWithDomain(OIDOAuthTokenErrorDomain) OAuthResponse(json) underlyingError(serverError);
+                  callback(nil, oAuthError);
+                  exit;
+                end;
+              end;
+
+              // not an OAuth error, just a generic server error
+              var returnedError:NSError := OIDErrorUtilities.errorWithCode(OIDErrorCode.ServerError) underlyingError(serverError) description(nil);
+              callback(nil,returnedError);
+              exit;
             end
             else
             begin
@@ -121,6 +172,8 @@ type
               
               if(assigned(jsonDeserializationError))then
               begin
+                var returnedError: NSError := OIDErrorUtilities.errorWithCode(OIDErrorCode.JSONDeserializationError) underlyingError(jsonDeserializationError) description(nil);
+                callback(nil, returnedError);
               end
               else
               begin
@@ -128,132 +181,38 @@ type
                 
                 if(not assigned(tokenResponse))then
                 begin
+                  var returnedError: NSError := OIDErrorUtilities.errorWithCode(OIDErrorCode.TokenResponseConstructionError) underlyingError(jsonDeserializationError) description(nil);
+                  callback(nil, returnedError);
                 end
                 else
                 begin
                   callback(tokenResponse,nil);
                 end;
-                
               end;
-              
-              
-              /*
-              NSError *jsonDeserializationError;
-              NSDictionary<NSString *, NSObject<NSCopying> *> *json =
-              [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonDeserializationError];
-              if (jsonDeserializationError) {
-              // A problem occurred deserializing the response/JSON.
-              NSError *returnedError =
-              [OIDErrorUtilities errorWithCode:OIDErrorCodeJSONDeserializationError
-              underlyingError:jsonDeserializationError
-              description:nil];
-              dispatch_async(dispatch_get_main_queue(), ^{
-              callback(nil, returnedError);
-              });
-              return;
-              }
-
-              OIDTokenResponse *tokenResponse =
-              [[OIDTokenResponse alloc] initWithRequest:request parameters:json];
-              if (!tokenResponse) {
-              // A problem occurred constructing the token response from the JSON.
-              NSError *returnedError =
-              [OIDErrorUtilities errorWithCode:OIDErrorCodeTokenResponseConstructionError
-              underlyingError:jsonDeserializationError
-              description:nil];
-              dispatch_async(dispatch_get_main_queue(), ^{
-              callback(nil, returnedError);
-              });
-              return;
-              }
-
-              // Success
-              dispatch_async(dispatch_get_main_queue(), ^{
-              callback(tokenResponse, nil);
-              });
-              */
-              
             end;
           end;
           
         end);
         
       dataTask.resume;
-
-      /*
-      + (void)performTokenRequest:(OIDTokenRequest *)request callback:(OIDTokenCallback)callback {
-      NSURLRequest *URLRequest = [request URLRequest];
-      NSURLSession *session = [NSURLSession sharedSession];
-      [[session dataTaskWithRequest:URLRequest
-      completionHandler:^(NSData *_Nullable data,
-      NSURLResponse *_Nullable response,
-      NSError *_Nullable error) {
-      if (error) {
-      // A network error or server error occurred.
-      NSError *returnedError =
-      [OIDErrorUtilities errorWithCode:OIDErrorCodeNetworkError
-      underlyingError:error
-      description:nil];
-      dispatch_async(dispatch_get_main_queue(), ^{
-      callback(nil, returnedError);
-      });
-      return;
-      }
-
-      NSHTTPURLResponse *HTTPURLResponse = (NSHTTPURLResponse *)response;
-
-      if (HTTPURLResponse.statusCode != 200) {
-      // A server error occurred.
-      NSError *serverError =
-      [OIDErrorUtilities HTTPErrorWithHTTPResponse:HTTPURLResponse data:data];
-
-      // HTTP 400 may indicate an RFC6749 Section 5.2 error response, checks for that
-      if (HTTPURLResponse.statusCode == 400) {
-      NSError *jsonDeserializationError;
-      NSDictionary<NSString *, NSObject<NSCopying> *> *json =
-      [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonDeserializationError];
-
-      // if the HTTP 400 response parses as JSON and has an 'error' key, it's an OAuth error
-      // these errors are special as they indicate a problem with the authorization grant
-      if (json[OIDOAuthErrorFieldError]) {
-      NSError *oauthError =
-      [OIDErrorUtilities OAuthErrorWithDomain:OIDOAuthTokenErrorDomain
-      OAuthResponse:json
-      underlyingError:serverError];
-      dispatch_async(dispatch_get_main_queue(), ^{
-      callback(nil, oauthError);
-      });
-      return;
-      }
-      }
-
-      // not an OAuth error, just a generic server error
-      NSError *returnedError =
-      [OIDErrorUtilities errorWithCode:OIDErrorCodeServerError
-      underlyingError:serverError
-      description:nil];
-      dispatch_async(dispatch_get_main_queue(), ^{
-      callback(nil, returnedError);
-      });
-      return;
-      }
-      */
-      
-    
     end;
     
-    method fillUserInfo(info:UserInfo; jsonDictionaryOrArray:id);
+    method fillUserInfo(jsonDictionaryOrArray:id):UserInfo;
     begin
+      var info:=new UserInfo;
       info.FamilyName := jsonDictionaryOrArray['family_name'];
       info.Gender := jsonDictionaryOrArray['gender'];
       info.GivenName := jsonDictionaryOrArray['given_name'];
       info.Locale := jsonDictionaryOrArray['locale'];
       info.Name := jsonDictionaryOrArray['name'];
       info.Picture := jsonDictionaryOrArray['picture'];
+      info.Email := jsonDictionaryOrArray['email'];
+      exit info;
     end;
     
-    method processResponse(info:UserInfo;data:NSData; httpResponse: NSHTTPURLResponse;taskError:NSError);
+    method processResponse(data:NSData; httpResponse: NSHTTPURLResponse;taskError:NSError):UserInfo;
     begin
+      var info:UserInfo:=nil;
       var jsonError: NSError;
             
       var jsonDictionaryOrArray: id := NSJSONSerialization.JSONObjectWithData(data) options(0) error(var jsonError);
@@ -275,12 +234,12 @@ type
               
         exit;
       end;
-            
-      fillUserInfo(info,jsonDictionaryOrArray);
+      
+      info := fillUserInfo(jsonDictionaryOrArray);
             
       NSLog('Success: %@', jsonDictionaryOrArray);
       
-      
+      exit info;
     end;
     
     
@@ -344,7 +303,7 @@ type
     method getUserInfo:UserInfo;static;
     begin
       var userinfoEndpoint: NSURL := AuthState.lastAuthorizationResponse.request.configuration.discoveryDocument.userinfoEndpoint;
-      var info := new UserInfo;
+      var info:UserInfo := nil;
       
       if not assigned(userinfoEndpoint) then
       begin
@@ -355,10 +314,8 @@ type
       
         var semaphore := dispatch_semaphore_create(0);
         
-        var accessToken := AuthState.lastTokenResponse.accessToken;
-        
         var request: NSMutableURLRequest := NSMutableURLRequest.requestWithURL(userinfoEndpoint);
-        var authorizationHeaderValue: NSString := NSString.stringWithFormat('Bearer %@', accessToken);
+        var authorizationHeaderValue: NSString := NSString.stringWithFormat('Bearer %@', AccessToken);
         request.addValue(authorizationHeaderValue) forHTTPHeaderField('Authorization');
         var configuration: NSURLSessionConfiguration := NSURLSessionConfiguration.defaultSessionConfiguration();
         var session: NSURLSession := NSURLSession.sessionWithConfiguration(configuration) &delegate(nil) delegateQueue(nil);
@@ -375,7 +332,7 @@ type
             exit;
           end;
               
-          processResponse(info,data,NSHTTPURLResponse(response),taskError);
+          info := processResponse(data,NSHTTPURLResponse(response),taskError);
           dispatch_semaphore_signal(semaphore);
             
         end);
@@ -400,7 +357,8 @@ type
       StateKey := _stateKey;
       
       var archivedAuthState: NSData := NSUserDefaults.standardUserDefaults().objectForKey(StateKey);
-      self.AuthState := OIDAuthState(NSKeyedUnarchiver.unarchiveObjectWithData(archivedAuthState)); 
+      self._authState := OIDAuthState(NSKeyedUnarchiver.unarchiveObjectWithData(archivedAuthState));
+      self._authState:stateChangeDelegate := self;
       
     end;
     
@@ -409,8 +367,12 @@ type
     property clientID:String read private write;
     property StateKey:String read private write;
     property InterestedParty:IAuthenticationInterestedParty;
-    
-    
+    property AccessToken:String read get_AccessToken;
+        
+    method clear;
+    begin
+      AuthState := nil;
+    end;
   
   end;
 

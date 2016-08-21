@@ -13,6 +13,7 @@ type
     property Name:String;
     property Picture:String;
     property Locale:String;
+    property Email:String;
   end;
 
 end.
