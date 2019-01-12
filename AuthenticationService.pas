@@ -6,9 +6,6 @@ uses
 
 type
 
-  IAuthenticationInterestedParty = public interface
-    method stateChanged(info:UserInfo);
-  end;
 
   AuthenticationService = public class(IOIDAuthStateChangeDelegate,IOIDAuthStateErrorDelegate)
 
