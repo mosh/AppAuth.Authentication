@@ -240,16 +240,6 @@ type
     property Expired:Boolean read get_Expired;
     property Authorized:Boolean read get_Authorized;
 
-    class method Instance:AuthenticationService;
-    begin
-      if(not assigned(_service))then
-      begin
-        _service := new AuthenticationService;
-      end;
-      exit _service;
-    end;
-
-
     method refresh;
     begin
 
