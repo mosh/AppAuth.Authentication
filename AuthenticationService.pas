@@ -12,8 +12,6 @@ type
   private
     _authState:OIDAuthState;
 
-    class _service : AuthenticationService;
-
     method authState(state: OIDAuthState) didEncounterAuthorizationError(error: NSError);
     begin
       NSLog('Received authorization error: %@', error);
@@ -46,68 +44,6 @@ type
 
     end;
 
-    method get_Expired:Boolean;
-    begin
-
-      if(not assigned(AuthState)) or ((assigned(AuthState)) and (not assigned(AuthState.lastTokenResponse))) then
-      begin
-        exit false;
-      end;
-
-      var expiryDate := DateTime(AuthState.lastTokenResponse.accessTokenExpirationDate);
-
-      var currentTime := new DateTime;
-
-      if(expiryDate < currentTime)then
-      begin
-        exit true;
-      end;
-
-      exit false;
-    end;
-
-    method get_Authorized:Boolean;
-    begin
-      var _authorized := iif(assigned(AuthState),AuthState.isAuthorized(),false);
-      if(not _authorized)then
-      begin
-        NSLog('AuthenticationService: Not Authorized');
-      end;
-      exit _authorized;
-    end;
-
-
-    method get_AuthState:OIDAuthState;
-    begin
-      exit _authState;
-    end;
-
-    method set_AuthState(value:OIDAuthState);
-    begin
-      if(assigned(value))then
-      begin
-        value.stateChangeDelegate := self;
-      end;
-      _authState := value;
-
-      var info:UserInfo := nil;
-
-      if(assigned(_authState))then
-      begin
-        info := getUserInfo;
-      end;
-
-      saveState(value);
-
-      &delegate:stateChanged(info);
-    end;
-
-    method get_AccessToken:String;
-    begin
-      var _accessToken := iif(Authorized,AuthState.lastTokenResponse.accessToken,'');
-      NSLog('AuthenticationService AccessToken [%@]',_accessToken);
-      exit _accessToken;
-    end;
 
     class method performTokenRequest(request: OIDTokenRequest) callback(callback: OIDTokenCallback);
     begin
@@ -236,9 +172,56 @@ type
 
   public
 
-    property AuthState:OIDAuthState read get_AuthState write set_AuthState;
-    property Expired:Boolean read get_Expired;
-    property Authorized:Boolean read get_Authorized;
+    property AuthState:OIDAuthState read begin
+        exit _authState;
+      end
+      write begin
+        if(assigned(value))then
+        begin
+          value.stateChangeDelegate := self;
+        end;
+        _authState := value;
+
+        var info:UserInfo := nil;
+
+        if(assigned(_authState))then
+        begin
+          info := getUserInfo;
+        end;
+
+        saveState(value);
+
+        &delegate:stateChanged(info);
+      end;
+
+    property Expired:Boolean read begin
+
+      if(not assigned(AuthState)) or ((assigned(AuthState)) and (not assigned(AuthState.lastTokenResponse))) then
+      begin
+        exit false;
+      end;
+
+      var expiryDate := DateTime(AuthState.lastTokenResponse.accessTokenExpirationDate);
+
+      var currentTime := new DateTime;
+
+      if(expiryDate < currentTime)then
+      begin
+        exit true;
+      end;
+
+      exit false;
+    end;
+
+
+    property Authorized:Boolean read begin
+      var _authorized := iif(assigned(AuthState),AuthState.isAuthorized(),false);
+      if(not _authorized)then
+      begin
+        NSLog('AuthenticationService: Not Authorized');
+      end;
+      exit _authorized;
+    end;
 
     method refresh;
     begin
@@ -353,7 +336,14 @@ type
     property clientID:String read private write;
     property StateKey:String read private write;
     property &delegate:IAuthenticationInterestedParty;
-    property AccessToken:String read get_AccessToken;
+
+    property AccessToken:String read begin
+      var _accessToken := iif(Authorized,AuthState.lastTokenResponse.accessToken,'');
+      NSLog('AuthenticationService AccessToken [%@]',_accessToken);
+      exit _accessToken;
+    end;
+
+
 
     method clear;
     begin
