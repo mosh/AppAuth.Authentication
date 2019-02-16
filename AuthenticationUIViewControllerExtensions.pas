@@ -19,6 +19,12 @@ type
 
   public
 
+    method performAuthentication;
+    begin
+      self.doAuthWithAutoCodeExchange;
+    end;
+
+
     method doCodeExchange;
     begin
       var tokenExchangeRequest: OIDTokenRequest := AppDelegate.AuthenticationService.AuthState.lastAuthorizationResponse.tokenExchangeRequest();
