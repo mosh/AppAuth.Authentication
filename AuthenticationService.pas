@@ -34,12 +34,30 @@ type
     end;
 
 
+
+
     method didChangeState(state:not nullable OIDAuthState);
     begin
 
       saveState(state);
 
-      var info := getUserInfo;
+      var userinfoEndpoint: NSURL := state.lastAuthorizationResponse.request.configuration.discoveryDocument.userinfoEndpoint;
+
+      if not assigned(userinfoEndpoint) then
+      begin
+        raise new NSException withName('') reason('Userinfo endpoint not declared in discovery document') userInfo(nil);
+      end;
+
+      var lastAccessToken := state.lastTokenResponse.accessToken;
+      var error:NSError;
+      var info := UserInfoHelper.getUserInfo(lastAccessToken, userinfoEndpoint, error);
+
+      if(assigned(error))then
+      begin
+        state.updateWithAuthorizationError(error);
+        &delegate:stateChanged(nil);
+      end;
+
       &delegate:stateChanged(info);
 
     end;
@@ -123,53 +141,6 @@ type
       dataTask.resume;
     end;
 
-    method fillUserInfo(jsonDictionaryOrArray:id):UserInfo;
-    begin
-      var info:=new UserInfo;
-      info.FamilyName := jsonDictionaryOrArray['family_name'];
-      info.Gender := jsonDictionaryOrArray['gender'];
-      info.GivenName := jsonDictionaryOrArray['given_name'];
-      info.Locale := jsonDictionaryOrArray['locale'];
-      info.Name := jsonDictionaryOrArray['name'];
-      info.Picture := jsonDictionaryOrArray['picture'];
-      info.Email := jsonDictionaryOrArray['email'];
-      exit info;
-    end;
-
-    method processResponse(data:NSData; httpResponse: NSHTTPURLResponse;taskError:NSError):UserInfo;
-    begin
-      var info:UserInfo:=nil;
-      var jsonError: NSError;
-
-      var jsonDictionaryOrArray: id := NSJSONSerialization.JSONObjectWithData(data) options(0) error(var jsonError);
-
-      if httpResponse.statusCode ≠ 200 then
-      begin
-        var responseText: NSString := new NSString WithData(data) encoding(NSStringEncoding.NSUTF8StringEncoding);
-
-        if httpResponse.statusCode = 401 then
-        begin
-          var oauthError: NSError := OIDErrorUtilities.resourceServerAuthorizationErrorWithCode(0) errorResponse(jsonDictionaryOrArray) underlyingError(taskError);
-          AuthState.updateWithAuthorizationError(oauthError);
-          NSLog('Authorization Error (%@). Response: %@', oauthError, responseText);
-        end
-        else
-        begin
-          NSLog('HTTP: %d. Response: %@', Integer(httpResponse.statusCode), responseText);
-        end;
-
-        exit;
-      end;
-
-      info := fillUserInfo(jsonDictionaryOrArray);
-
-      NSLog('Success: %@', jsonDictionaryOrArray);
-
-      exit info;
-    end;
-
-
-
   public
 
     property AuthState:OIDAuthState read begin
@@ -186,7 +157,26 @@ type
 
         if(assigned(_authState))then
         begin
-          info := getUserInfo;
+
+          var userinfoEndpoint: NSURL := _authState.lastAuthorizationResponse.request.configuration.discoveryDocument.userinfoEndpoint;
+
+          if not assigned(userinfoEndpoint) then
+          begin
+            raise new NSException withName('') reason('Userinfo endpoint not declared in discovery document') userInfo(nil);
+          end;
+
+          var lastAccessToken := _authState.lastTokenResponse.accessToken;
+
+          var error:NSError;
+
+          info := UserInfoHelper.getUserInfo(lastAccessToken, userinfoEndpoint, error);
+
+          if(assigned(error))then
+          begin
+            _authState.updateWithAuthorizationError(error);
+            &delegate:stateChanged(nil);
+          end;
+
         end;
 
         saveState(value);
@@ -269,54 +259,6 @@ type
       end;
     end;
 
-    method getUserInfo:UserInfo;
-    begin
-      var userinfoEndpoint: NSURL := AuthState.lastAuthorizationResponse.request.configuration.discoveryDocument.userinfoEndpoint;
-      var info:UserInfo := nil;
-
-      if not assigned(userinfoEndpoint) then
-      begin
-        raise new NSException withName('') reason('Userinfo endpoint not declared in discovery document') userInfo(nil);
-      end;
-
-      var outerExecutionBlock: NSBlockOperation := NSBlockOperation.blockOperationWithBlock(method begin
-
-        var semaphore := dispatch_semaphore_create(0);
-
-        var request: NSMutableURLRequest := NSMutableURLRequest.requestWithURL(userinfoEndpoint);
-        var authorizationHeaderValue: NSString := NSString.stringWithFormat('Bearer %@', AccessToken);
-        request.addValue(authorizationHeaderValue) forHTTPHeaderField('Authorization');
-        var configuration: NSURLSessionConfiguration := NSURLSessionConfiguration.defaultSessionConfiguration();
-        var session: NSURLSession := NSURLSession.sessionWithConfiguration(configuration) &delegate(nil) delegateQueue(nil);
-
-        var postDataTask: NSURLSessionDataTask := session.dataTaskWithRequest(request) completionHandler((data, response, taskError) ->
-        begin
-
-          var responseClass := NSHTTPURLResponse.class;
-          var isKindOf := response.isKindOfClass(responseClass);
-
-          if (not isKindOf) then
-          begin
-            NSLog('Non-HTTP response %@', taskError);
-            exit;
-          end;
-
-          info := processResponse(data,NSHTTPURLResponse(response),taskError);
-          dispatch_semaphore_signal(semaphore);
-
-        end);
-
-        postDataTask.resume;
-        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-
-      end);
-
-      var workerQueue := new NSOperationQueue();
-      workerQueue.addOperations([outerExecutionBlock]) waitUntilFinished(true);
-
-      exit info;
-
-    end;
 
     method setup(issuer:String; _clientID:String;redirect:String;_stateKey:String);
     begin

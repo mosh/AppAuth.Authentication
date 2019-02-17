@@ -8,16 +8,13 @@ type
 
   AuthenticationUIViewControllerExtensions = public extension class(UIViewController)
 
-  private
+  public
 
     property AppDelegate:AuthenticationAppDelegate read
       begin
         exit (UIApplication.sharedApplication.&delegate) as AuthenticationAppDelegate;
       end;
 
-
-
-  public
 
     method performAuthentication;
     begin
@@ -96,6 +93,8 @@ type
 
       NSLog('Fetching configuration for issuer: %@', issuer);
 
+      AppDelegate.InAuthorizationFlow := true;
+
       OIDAuthorizationService.discoverServiceConfigurationForIssuer(issuer) completion(method (configuration: OIDServiceConfiguration; error: NSError)
       begin
 
@@ -103,6 +102,7 @@ type
         begin
           NSLog('Error retrieving discovery document: %@', error.localizedDescription());
           AppDelegate.AuthenticationService.AuthState := nil;
+          AppDelegate.InAuthorizationFlow := false;
           exit;
         end;
 
@@ -114,6 +114,8 @@ type
 
         appDelegate.currentAuthorizationFlow := OIDAuthState.authStateByPresentingAuthorizationRequest(request)  presentingViewController(self) callback(method (authState: AppAuth.OIDAuthState; authRequestError: NSError)
         begin
+
+          AppDelegate.InAuthorizationFlow := false;
 
           if(assigned(authState))then
           begin

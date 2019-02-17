@@ -11,6 +11,7 @@ type
     _authenticationService:AuthenticationService;
 
   public
+    property InAuthorizationFlow:Boolean;
 
     method application(app: UIApplication) openURL(url: NSURL) options(options: NSDictionary<NSString, id>): Boolean;
     begin
