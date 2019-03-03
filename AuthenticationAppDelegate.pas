@@ -15,9 +15,7 @@ type
 
     method application(app: UIApplication) openURL(url: NSURL) options(options: NSDictionary<NSString, id>): Boolean;
     begin
-      //if((assigned(self.currentAuthorizationFlow)) and (self.currentAuthorizationFlow is IOIDAuthorizationFlowSession))then
-      //begin
-      if IOIDAuthorizationFlowSession(currentAuthorizationFlow).resumeAuthorizationFlowWithURL(url) then
+      if currentAuthorizationFlow.resumeExternalUserAgentFlowWithURL(url) then
       begin
         currentAuthorizationFlow := nil;
         exit true;
@@ -32,7 +30,11 @@ type
       exit self.application(application) openURL(url) options(options);
     end;
 
-    property currentAuthorizationFlow: IOIDAuthorizationFlowSession;
+    // The authorization flow session which receives the return URL from \SFSafariViewController.
+    // We need to store this in the app delegate as it's that delegate which receives the
+    // incoming URL on UIApplicationDelegate.application:openURL:options:. This property will be
+    // nil, except when an authorization flow is in progress.
+    property currentAuthorizationFlow: OIDExternalUserAgentSession;
 
     property AuthenticationService:AuthenticationService read
       begin

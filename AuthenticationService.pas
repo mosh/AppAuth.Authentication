@@ -33,9 +33,6 @@ type
       NSUserDefaults.standardUserDefaults().synchronize();
     end;
 
-
-
-
     method didChangeState(state:not nullable OIDAuthState);
     begin
 
