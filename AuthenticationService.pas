@@ -29,8 +29,14 @@ type
     method saveState(state:OIDAuthState);
     begin
       var archivedAuthState: NSData := NSKeyedArchiver.archivedDataWithRootObject(state);
-      NSUserDefaults.standardUserDefaults().setObject(archivedAuthState) forKey(StateKey);
-      NSUserDefaults.standardUserDefaults().synchronize();
+      NSUserDefaults.standardUserDefaults.setObject(archivedAuthState) forKey(StateKey);
+      NSUserDefaults.standardUserDefaults.synchronize;
+    end;
+
+    method loadState:OIDAuthState;
+    begin
+      var archivedAuthState: NSData := NSUserDefaults.standardUserDefaults.objectForKey(StateKey);
+      exit NSKeyedUnarchiver.unarchiveObjectWithData(archivedAuthState);
     end;
 
     method didChangeState(state:not nullable OIDAuthState);
@@ -149,8 +155,9 @@ type
           value.stateChangeDelegate := self;
         end;
         _authState := value;
-
+        NSLog('New authstate with AccessToken %@',_authState.lastTokenResponse.accessToken);
         var info:UserInfo := nil;
+        saveState(_authState);
 
         if(assigned(_authState))then
         begin
@@ -176,8 +183,6 @@ type
 
         end;
 
-        saveState(value);
-
         &delegate:stateChanged(info);
       end;
 
@@ -202,10 +207,14 @@ type
 
 
     property Authorized:Boolean read begin
-      var _authorized := iif(assigned(AuthState),AuthState.isAuthorized(),false);
+      var _authorized := iif(assigned(AuthState),AuthState.isAuthorized,false);
       if(not _authorized)then
       begin
-        NSLog('AuthenticationService: Not Authorized');
+        NSLog('Not authorized');
+      end
+      else
+      begin
+        NSLog('Authorized');
       end;
       exit _authorized;
     end;
@@ -213,11 +222,10 @@ type
     method refresh;
     begin
 
-      //if(Expired)then
       if(assigned(AuthState))then
       begin
 
-        NSLog('current expiry %@',AuthState.lastTokenResponse.accessTokenExpirationDate);
+        NSLog('Current expiry %@',AuthState.lastTokenResponse.accessTokenExpirationDate);
 
         var request :OIDTokenRequest := AuthState.tokenRefreshRequest;
 
@@ -229,7 +237,7 @@ type
 
               var semaphore := dispatch_semaphore_create(0);
 
-              /*OIDAuthorizationService.*/performTokenRequest(request) callback(method (tokenResponse: AppAuth.OIDTokenResponse; error: NSError)
+              performTokenRequest(request) callback(method (tokenResponse: AppAuth.OIDTokenResponse; error: NSError)
                 begin
                   if(assigned(tokenResponse))then
                   begin
@@ -259,14 +267,22 @@ type
 
     method setup(issuer:String; _clientID:String;redirect:String;_stateKey:String);
     begin
-      issuerURL := NSURL.URLWithString(issuer);
       clientID:= _clientID;
-      redirectURL:= NSURL.URLWithString(redirect);
       StateKey := _stateKey;
+      issuerURL := NSURL.URLWithString(issuer);
+      redirectURL:= NSURL.URLWithString(redirect);
 
-      var archivedAuthState: NSData := NSUserDefaults.standardUserDefaults().objectForKey(StateKey);
-      self._authState := OIDAuthState(NSKeyedUnarchiver.unarchiveObjectWithData(archivedAuthState));
+      self._authState := loadState;
       self._authState:stateChangeDelegate := self;
+
+      if(assigned(self._authState))then
+      begin
+        NSLog('%@',$'Startup with acess token {self._authState.lastTokenResponse.accessToken}');
+      end
+      else
+      begin
+        NSLog('%@',$'Startup without acess token');
+      end;
 
     end;
 
@@ -278,11 +294,9 @@ type
 
     property AccessToken:String read begin
       var _accessToken := iif(Authorized,AuthState.lastTokenResponse.accessToken,'');
-      NSLog('AuthenticationService AccessToken [%@]',_accessToken);
+      NSLog('AuthenticationService current AccessToken [%@]',_accessToken);
       exit _accessToken;
     end;
-
-
 
     method clear;
     begin

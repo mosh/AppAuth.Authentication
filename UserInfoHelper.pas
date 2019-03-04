@@ -38,7 +38,6 @@ type
           var oauthError: NSError := OIDErrorUtilities.resourceServerAuthorizationErrorWithCode(0) errorResponse(jsonDictionaryOrArray) underlyingError(taskError);
           NSLog('Authorization Error (%@). Response: %@', oauthError, responseText);
           taskError:=oauthError;
-
         end
         else
         begin
@@ -49,8 +48,6 @@ type
       end;
 
       info := fillUserInfo(jsonDictionaryOrArray);
-
-      NSLog('Success: %@', jsonDictionaryOrArray);
 
       exit info;
     end;
