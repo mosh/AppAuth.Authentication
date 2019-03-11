@@ -155,12 +155,12 @@ type
           value.stateChangeDelegate := self;
         end;
         _authState := value;
-        NSLog('New authstate with AccessToken %@',_authState.lastTokenResponse.accessToken);
         var info:UserInfo := nil;
         saveState(_authState);
 
         if(assigned(_authState))then
         begin
+          NSLog('New authstate with AccessToken %@',_authState.lastTokenResponse.accessToken);
 
           var userinfoEndpoint: NSURL := _authState.lastAuthorizationResponse.request.configuration.discoveryDocument.userinfoEndpoint;
 
