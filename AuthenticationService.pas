@@ -277,11 +277,11 @@ type
 
       if(assigned(self._authState))then
       begin
-        NSLog('%@',$'Startup with acess token {self._authState.lastTokenResponse.accessToken}');
+        NSLog('%@',$'Startup with access token {self._authState.lastTokenResponse.accessToken}');
       end
       else
       begin
-        NSLog('%@',$'Startup without acess token');
+        NSLog('%@',$'Startup without access token');
       end;
 
     end;
