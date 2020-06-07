@@ -16,7 +16,7 @@
     <SDK>iOS</SDK>
     <DeploymentTargetVersion>7.0</DeploymentTargetVersion>
     <SupportUIKitForMac>True</SupportUIKitForMac>
-  </PropertyGroup>  
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <Optimize>False</Optimize>
     <OutputPath>.\Bin\Debug</OutputPath>
@@ -36,8 +36,11 @@
     <RemoteProjectReference Include="github.com/mosh/ImportSolution/AppAuth.elements:*">
       <Private>True</Private>
     </RemoteProjectReference>
+    <RemoteProjectReference Include="github.com/Mosh/Moshine.Foundation/libMoshine.Foundation.elements:*">
+      <Private>True</Private>
+    </RemoteProjectReference>
   </ItemGroup>
-  <ItemGroup></ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\RemObjects Software\Elements\RemObjects.Elements.Toffee.targets" />
+  <Import Project="AppAuth.Authentication.projitems" Label="Shared" />
   <Import Project="AppAuth.Authentication.projitems" Label="Shared" />
 </Project>
