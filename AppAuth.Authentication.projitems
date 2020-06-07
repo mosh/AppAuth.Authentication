@@ -12,5 +12,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)UserInfo.pas" />
     <Compile Include="$(MSBuildThisFileDirectory)AuthenticationService.pas" />
     <Compile Include="$(MSBuildThisFileDirectory)AuthenticationUIViewControllerExtensions.pas" />
+    <Compile Include="$(MSBuildThisFileDirectory)IAuthenticationInterestedParty.pas" />
+    <Compile Include="$(MSBuildThisFileDirectory)UserInfoHelper.pas" />
   </ItemGroup>
 </Project>

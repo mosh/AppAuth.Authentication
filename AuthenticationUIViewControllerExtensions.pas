@@ -7,118 +7,69 @@ uses
 type
 
   AuthenticationUIViewControllerExtensions = public extension class(UIViewController)
-  public
-  
-    method doCodeExchange;
+
+  private
+
+    method doAuthWithAutoCodeExchange;
     begin
-      var tokenExchangeRequest: OIDTokenRequest := AuthenticationService.Instance.AuthState.lastAuthorizationResponse.tokenExchangeRequest();
-      NSLog('Performing authorization code exchange with request [%@]', tokenExchangeRequest);
-      
-      OIDAuthorizationService.performTokenRequest(tokenExchangeRequest) callback(method (tokenResponse: OIDTokenResponse; error: NSError)
+      NSLog('%@','doAuthWithAutoCodeExchange');
+      var issuer:NSURL := AppDelegate.AuthenticationService.issuerURL;
+      var redirectURI:NSURL := AppDelegate.AuthenticationService.redirectURL;
+
+      AppDelegate.InAuthorizationFlow := true;
+
+      OIDAuthorizationService.discoverServiceConfigurationForIssuer(issuer) completion(method (configuration: OIDServiceConfiguration; error: NSError)
       begin
-        
-        if(not assigned(tokenResponse))then
+
+        if(assigned(error))then
         begin
-          raise new NSException withName('') reason(error.localizedDescription()) userInfo(nil);
+          NSLog('%@',$'discoverServiceConfigurationForIssuer completion with error {error.localizedDescription}');
+          AppDelegate.AuthenticationService.AuthState := nil;
+          AppDelegate.InAuthorizationFlow := false;
+          exit;
         end
         else
         begin
-          NSLog('Received token response with accessToken: %@', tokenResponse.accessToken);
+          NSLog('%@',$'discoverServiceConfigurationForIssuer completion success');
         end;
-        AuthenticationService.Instance.AuthState.updateWithTokenResponse(tokenResponse) error(error);
-      end);
-      
-    end;
-  
-  
-    method doAuthNoCodeExchange;
-    begin
-      var issuer: NSURL := AuthenticationService.Instance.issuerURL;
-      var redirectURI: NSURL := AuthenticationService.Instance.redirectURL;
-      
-      NSLog('Fetching configuration for issuer: %@', issuer);
-      
-      OIDAuthorizationService.discoverServiceConfigurationForIssuer(issuer) completion(method (configuration:nullable OIDServiceConfiguration; error: nullable NSError)
-      begin
-        
-        if not assigned(configuration) then
-        begin
-          NSLog('Error retrieving discovery document: %@', error.localizedDescription());
-          exit;
-        end;
-        
-        NSLog('Got configuration: %@', configuration);
-          
-        var request: OIDAuthorizationRequest := new OIDAuthorizationRequest withConfiguration(configuration) clientId(AuthenticationService.Instance.clientID) scopes([OIDScopeOpenID, OIDScopeProfile, OIDScopeEmail]) redirectURL(redirectURI) responseType(OIDResponseTypeCode) additionalParameters(nil);
-        var appDelegate: AuthenticationAppDelegate := (UIApplication.sharedApplication.&delegate) as AuthenticationAppDelegate;
-        
-        NSLog('Initiating authorization request %@', request);
-          
-        appDelegate.currentAuthorizationFlow := OIDAuthorizationService.presentAuthorizationRequest(request) presentingViewController(self) callback(method (authorizationResponse: AppAuth.OIDAuthorizationResponse; presentError: NSError)
-        begin
-            
-          if assigned(authorizationResponse) then
-          begin
-            var authState := new OIDAuthState withAuthorizationResponse(authorizationResponse);
-            AuthenticationService.Instance.AuthState := authState;
-            NSLog('Authorization response with code: %@', authorizationResponse.authorizationCode);
-          end
-          else
-          begin
-            NSLog('Authorization error: %@', error:localizedDescription());
-          end;
-            
-        end);
-        
-      end);
-      
-    end;
-    
-    method doAuthWithAutoCodeExchange;
-    begin
-      var issuer:NSURL := AuthenticationService.Instance.issuerURL;
-      var redirectURI:NSURL := AuthenticationService.Instance.redirectURL;
-      
-      NSLog('Fetching configuration for issuer: %@', issuer);
-      
-      OIDAuthorizationService.discoverServiceConfigurationForIssuer(issuer) completion(method (configuration: OIDServiceConfiguration; error: NSError)
-      begin
-        
-        if(not assigned(configuration))then
-        begin
-          NSLog('Error retrieving discovery document: %@', error.localizedDescription());
-          AuthenticationService.Instance.AuthState := nil;
-          exit;
-        end;
-          
-        NSLog('Got configuration: %@', configuration);
-          
-        var request := new OIDAuthorizationRequest withConfiguration(configuration) clientId(AuthenticationService.Instance.clientID) scopes([OIDScopeOpenID, OIDScopeProfile,OIDScopeEmail]) redirectURL(redirectURI) responseType(OIDResponseTypeCode) additionalParameters(nil);
-            
-        var appDelegate: AuthenticationAppDelegate := (UIApplication.sharedApplication.&delegate) as AuthenticationAppDelegate;
+
+        var request := new OIDAuthorizationRequest withConfiguration(configuration) clientId(AppDelegate.AuthenticationService.clientID) scopes([OIDScopeOpenID, OIDScopeProfile,OIDScopeEmail]) redirectURL(redirectURI) responseType(OIDResponseTypeCode) additionalParameters(nil);
+
         NSLog('Initiating authorization request with scope: %@', request.scope);
-          
+
         appDelegate.currentAuthorizationFlow := OIDAuthState.authStateByPresentingAuthorizationRequest(request)  presentingViewController(self) callback(method (authState: AppAuth.OIDAuthState; authRequestError: NSError)
         begin
-            
+
+          AppDelegate.InAuthorizationFlow := false;
+
           if(assigned(authState))then
           begin
-            
-            AuthenticationService.Instance.AuthState := authState;
-            NSLog('Got authorization tokens. Access token: %@', authState.lastTokenResponse.accessToken);
+            NSLog('%@',$'authStateByPresentingAuthorizationRequest callback with access token {authState.lastTokenResponse.accessToken}');
+            AppDelegate.AuthenticationService.AuthState := authState;
           end
           else
           begin
-            NSLog('Authorization error: %@', authRequestError:localizedDescription());
-            AuthenticationService.Instance.AuthState := nil;
+            NSLog('%@',$'authStateByPresentingAuthorizationRequest callback with error {authRequestError:localizedDescription}');
+            AppDelegate.AuthenticationService.AuthState := nil;
           end;
         end);
-          
-          
+
       end);
-      
+
     end;
-    
+
+  public
+
+    property AppDelegate:AuthenticationAppDelegate read
+      begin
+        exit (UIApplication.sharedApplication.&delegate) as AuthenticationAppDelegate;
+      end;
+
+    method performAuthentication;
+    begin
+      self.doAuthWithAutoCodeExchange;
+    end;
+
   end;
 
 end.
