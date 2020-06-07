@@ -4,17 +4,69 @@
 <dict>
 	<key>DebugPaneActiveTab</key>
 	<real>0.0</real>
+	<key>ExplorerSplitter</key>
+	<real>250</real>
 	<key>FolderExpanded_AppAuth.Authentication_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AppAuth.Authentication.elements_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/</key>
+	<true/>
+	<key>FolderExpanded_libAppAuth.Authentication_/Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/libAppAuth.Authentication.elements---References</key>
+	<true/>
+	<key>FolderExpanded_libAppAuth.Authentication_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/libAppAuth.Authentication.elements_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/</key>
 	<true/>
 	<key>NavigationPaneActiveTab</key>
 	<real>0.0</real>
 	<key>Properties</key>
 	<dict/>
 	<key>SelectedNode</key>
-	<string>file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AppAuth.Authentication.elements_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AuthenticationAppDelegate.pas</string>
+	<string>file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AppAuth.Authentication.elements_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AppAuth.Authentication.elements</string>
 	<key>ViewMetaData</key>
 	<dict>
 		<key>file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AppAuth.Authentication.elements_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AuthenticationAppDelegate.pas</key>
+		<dict>
+			<key>CursorX</key>
+			<integer>16</integer>
+			<key>CursorY</key>
+			<integer>15</integer>
+			<key>ScrollX</key>
+			<real>0.0</real>
+			<key>ScrollY</key>
+			<real>0.0</real>
+			<key>SelectionCursorUndecided</key>
+			<true/>
+			<key>SelectionEndColumn</key>
+			<integer>37</integer>
+			<key>SelectionEndLine</key>
+			<integer>15</integer>
+			<key>SelectionIsLinear</key>
+			<true/>
+			<key>SelectionStartColumn</key>
+			<integer>9</integer>
+			<key>SelectionStartLine</key>
+			<integer>15</integer>
+		</dict>
+		<key>file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/AppAuth.Authentication.elements_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/UserInfo.pas</key>
+		<dict>
+			<key>CursorX</key>
+			<integer>0</integer>
+			<key>CursorY</key>
+			<integer>0</integer>
+			<key>ScrollX</key>
+			<real>0.0</real>
+			<key>ScrollY</key>
+			<real>0.0</real>
+			<key>SelectionCursorUndecided</key>
+			<false/>
+			<key>SelectionEndColumn</key>
+			<integer>0</integer>
+			<key>SelectionEndLine</key>
+			<integer>0</integer>
+			<key>SelectionIsLinear</key>
+			<false/>
+			<key>SelectionStartColumn</key>
+			<integer>0</integer>
+			<key>SelectionStartLine</key>
+			<integer>-1</integer>
+		</dict>
+		<key>file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/libAppAuth.Authentication.elements_file:///Users/JohnMoshakis/Documents/develop/Nougat/AppAuth.Authentication/Library.pas</key>
 		<dict>
 			<key>CursorX</key>
 			<integer>0</integer>
@@ -38,5 +90,13 @@
 			<integer>-1</integer>
 		</dict>
 	</dict>
+	<key>Window_Height</key>
+	<real>950</real>
+	<key>Window_Width</key>
+	<real>1309</real>
+	<key>Window_X</key>
+	<real>395</real>
+	<key>Window_Y</key>
+	<real>227</real>
 </dict>
 </plist>
