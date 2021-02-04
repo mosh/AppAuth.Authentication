@@ -5,7 +5,7 @@ uses
   Foundation,UIKit;
 
 type
-
+  [Cocoa]
   AuthenticationAppDelegate = public class(IUIApplicationDelegate)
   private
     _authenticationService:AuthenticationService;

@@ -1,7 +1,8 @@
-﻿namespace AppAuth.Authentication;
+﻿namespace AppAuth.Authentication.Helpers;
 
 uses
   AppAuth,
+  AppAuth.Authentication.Models,
   Foundation;
 
 type

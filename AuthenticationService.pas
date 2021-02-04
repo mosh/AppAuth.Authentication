@@ -2,17 +2,46 @@
 
 uses
   AppAuth,
+  AppAuth.Authentication.Helpers,
+  AppAuth.Authentication.Models,
   Foundation,
   Moshine.Foundation,
   RemObjects.Elements.RTL;
 
 type
 
-
+  [Cocoa]
   AuthenticationService = public class(IOIDAuthStateChangeDelegate,IOIDAuthStateErrorDelegate)
 
   private
     _authState:OIDAuthState;
+
+    method didChangeState(state:not nullable OIDAuthState);
+    begin
+
+      saveState(state);
+
+      var userinfoEndpoint: NSURL := state.lastAuthorizationResponse.request.configuration.discoveryDocument.userinfoEndpoint;
+
+      if not assigned(userinfoEndpoint) then
+      begin
+        raise new NSException withName('') reason('Userinfo endpoint not declared in discovery document') userInfo(nil);
+      end;
+
+      var lastAccessToken := state.lastTokenResponse.accessToken;
+      var error:NSError;
+      var info := UserInfoHelper.getUserInfo(lastAccessToken, userinfoEndpoint, error);
+
+      if(assigned(error))then
+      begin
+        state.updateWithAuthorizationError(error);
+        &delegate:stateChanged(nil);
+      end;
+
+      &delegate:stateChanged(info);
+
+    end;
+
 
     method authState(state: OIDAuthState) didEncounterAuthorizationError(error: NSError);
     begin
@@ -41,31 +70,6 @@ type
       exit NSKeyedUnarchiver.unarchiveObjectWithData(archivedAuthState);
     end;
 
-    method didChangeState(state:not nullable OIDAuthState);
-    begin
-
-      saveState(state);
-
-      var userinfoEndpoint: NSURL := state.lastAuthorizationResponse.request.configuration.discoveryDocument.userinfoEndpoint;
-
-      if not assigned(userinfoEndpoint) then
-      begin
-        raise new NSException withName('') reason('Userinfo endpoint not declared in discovery document') userInfo(nil);
-      end;
-
-      var lastAccessToken := state.lastTokenResponse.accessToken;
-      var error:NSError;
-      var info := UserInfoHelper.getUserInfo(lastAccessToken, userinfoEndpoint, error);
-
-      if(assigned(error))then
-      begin
-        state.updateWithAuthorizationError(error);
-        &delegate:stateChanged(nil);
-      end;
-
-      &delegate:stateChanged(info);
-
-    end;
 
 
     class method performTokenRequest(request: OIDTokenRequest) callback(callback: OIDTokenCallback);
@@ -146,6 +150,8 @@ type
       dataTask.resume;
     end;
 
+
+
   public
 
     property AuthState:OIDAuthState read begin
@@ -208,17 +214,41 @@ type
     end;
 
 
-    property Authorized:Boolean read begin
-      var _authorized := iif(assigned(AuthState),AuthState.isAuthorized,false);
-      if(not _authorized)then
+    property Authorized:Boolean
+      read
+        begin
+          var _authorized := iif(assigned(AuthState),AuthState.isAuthorized,false);
+          if(not _authorized)then
+          begin
+            NSLog('Not authorized');
+          end
+          else
+          begin
+            NSLog('Authorized');
+          end;
+          exit _authorized;
+        end;
+
+
+    property issuerURL:NSURL read private write;
+    property redirectURL:NSURL read private write;
+    property clientID:String read private write;
+    property StateKey:String read private write;
+    property &delegate:IAuthenticationInterestedParty;
+
+    property AccessToken:NSString read
       begin
-        NSLog('Not authorized');
-      end
-      else
-      begin
-        NSLog('Authorized');
+
+        var emptyString:NSString := '';
+
+        var _accessToken := iif(Authorized,AuthState.lastTokenResponse.accessToken,emptyString);
+        NSLog('AuthenticationService current AccessToken [%@]',_accessToken);
+        exit _accessToken;
       end;
-      exit _authorized;
+
+    method clear;
+    begin
+      AuthState := nil;
     end;
 
     method refresh;
@@ -266,7 +296,6 @@ type
       end;
     end;
 
-
     method setup(issuer:String; _clientID:String;redirect:String;_stateKey:String);
     begin
       clientID:= _clientID;
@@ -288,22 +317,8 @@ type
 
     end;
 
-    property issuerURL:NSURL read private write;
-    property redirectURL:NSURL read private write;
-    property clientID:String read private write;
-    property StateKey:String read private write;
-    property &delegate:IAuthenticationInterestedParty;
 
-    property AccessToken:String read begin
-      var _accessToken := iif(Authorized,AuthState.lastTokenResponse.accessToken,'');
-      NSLog('AuthenticationService current AccessToken [%@]',_accessToken);
-      exit _accessToken;
-    end;
 
-    method clear;
-    begin
-      AuthState := nil;
-    end;
 
   end;
 

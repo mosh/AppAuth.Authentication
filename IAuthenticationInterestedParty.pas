@@ -1,5 +1,8 @@
 ﻿namespace AppAuth.Authentication;
 
+uses
+  AppAuth.Authentication.Models;
+
 type
 
   IAuthenticationInterestedParty = public interface

@@ -1,8 +1,8 @@
-﻿namespace AppAuth.Authentication;
+﻿namespace AppAuth.Authentication.Models;
 
 uses
   Foundation;
-  
+
 type
 
   UserInfo = public class
