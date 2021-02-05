@@ -21,12 +21,12 @@
     <Mode>Island</Mode>
     <SubMode>Darwin</SubMode>
     <SDK>iOS</SDK>
-    <SupportMacCatalyst>True</SupportMacCatalyst>
+    <SupportMacCatalyst>False</SupportMacCatalyst>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Target)' == 'Toffee.iOS' ">
     <Mode>Toffee</Mode>
     <SDK>iOS</SDK>
-    <SupportMacCatalyst>True</SupportMacCatalyst>
+    <SupportMacCatalyst>False</SupportMacCatalyst>
     <DefaultUses>Foundation;RemObjects.Elements.Linq</DefaultUses>
   </PropertyGroup>
   <ItemGroup>
