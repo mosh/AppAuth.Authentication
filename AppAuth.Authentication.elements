@@ -31,9 +31,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="#" />
-    <Reference Include="Elements">
-      <Private>True</Private>
-    </Reference>
     <RemoteProjectReference Include="github.com/mosh/Moshine.Foundation/Moshine.Foundation.elements:*">
       <Private>True</Private>
     </RemoteProjectReference>
@@ -48,6 +45,16 @@
     <Compile Include="IAuthenticationInterestedParty.pas" />
     <Compile Include="Models\UserInfo.pas" />
     <Compile Include="Helpers\UserInfoHelper.pas" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Target)' == 'Island.Darwin.iOS'">
+    <Reference Include="Elements">
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Target)' == 'Toffee.iOS'">
+    <Reference Include="libElements">
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\RemObjects Software\Elements\RemObjects.Elements.targets" />
 </Project>
