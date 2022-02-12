@@ -22,6 +22,7 @@
     <SubMode>Darwin</SubMode>
     <SDK>iOS</SDK>
     <SupportMacCatalyst>False</SupportMacCatalyst>
+    <DefaultObjectModel>Cocoa</DefaultObjectModel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Target)' == 'Toffee.iOS' ">
     <Mode>Toffee</Mode>
