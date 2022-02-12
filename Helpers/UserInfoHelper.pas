@@ -3,32 +3,31 @@
 uses
   AppAuth,
   AppAuth.Authentication.Models,
-  Foundation;
+  Foundation, RemObjects.Elements.RTL;
 
 type
   UserInfoHelper = public class
   private
 
-    class method fillUserInfo(jsonDictionaryOrArray:id):UserInfo;
+    class method fillUserInfo(obj:NSDictionary):UserInfo;
     begin
-      var info:=new UserInfo;
-      info.FamilyName := jsonDictionaryOrArray['family_name'];
-      info.Gender := jsonDictionaryOrArray['gender'];
-      info.GivenName := jsonDictionaryOrArray['given_name'];
-      info.Locale := jsonDictionaryOrArray['locale'];
-      info.Name := jsonDictionaryOrArray['name'];
-      info.Picture := jsonDictionaryOrArray['picture'];
-      info.Email := jsonDictionaryOrArray['email'];
+      var info := new UserInfo;
+      info.FamilyName := obj['family_name'];
+      info.Gender := obj['gender'];
+      info.GivenName := obj['given_name'];
+      info.Locale := obj['locale'];
+      info.Name := obj['name'];
+      info.Picture := obj['picture'];
+      info.Email := obj['email'];
       exit info;
     end;
-
 
     class method processResponse(data:NSData; httpResponse: NSHTTPURLResponse; taskError:NSError):UserInfo;
     begin
       var info:UserInfo:=nil;
       var jsonError: NSError;
 
-      var jsonDictionaryOrArray: id := NSJSONSerialization.JSONObjectWithData(data) options(0) error(var jsonError);
+      var jsonDictionaryOrArray := NSJSONSerialization.JSONObjectWithData(data) options(0) error(var jsonError);
 
       if httpResponse.statusCode ≠ 200 then
       begin
@@ -48,7 +47,15 @@ type
         exit;
       end;
 
-      info := fillUserInfo(jsonDictionaryOrArray);
+      if(jsonDictionaryOrArray is NSDictionary)then
+      begin
+        info := fillUserInfo(NSDictionary(jsonDictionaryOrArray));
+      end
+      else
+      begin
+        raise new NotImplementedException;
+      end;
+
 
       exit info;
     end;
