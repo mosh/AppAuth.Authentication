@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="#" />
-    <RemoteProjectReference Include="github.com/mosh/Moshine.Foundation/Moshine.Foundation.elements:*">
+    <RemoteProjectReference Include="github.com/mosh/Moshine.Foundation/Moshine.Foundation/Moshine.Foundation.elements:*">
       <Private>True</Private>
     </RemoteProjectReference>
     <RemoteProjectReference Include="github.com/mosh/ImportSolution/AppAuth.elements:*">
