@@ -32,6 +32,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="#" />
+    <RemoteProjectReference Include="github.com/mosh/Moshine.Foundation/Moshine.Foundation.Contracts/Moshine.Foundation.Contracts.elements:*">
+      <Private>True</Private>
+    </RemoteProjectReference>
     <RemoteProjectReference Include="github.com/mosh/Moshine.Foundation/Moshine.Foundation/Moshine.Foundation.elements:*">
       <Private>True</Private>
     </RemoteProjectReference>
